@@ -2,19 +2,19 @@
 
 Оригиналы фото и видео с Android — в папку на вашем Windows-компьютере по домашней сети. Без облака и перекодирования, с сохранением оригиналов на телефоне.
 
-[English](README.en.md) · [Скачать beta](https://github.com/Sharko-21/LanVault/releases/tag/v0.4.0-beta.1) · [Инструкция](docs/installation/beta.md) · [Сообщить о проблеме](https://github.com/Sharko-21/LanVault/issues/new/choose)
+[English](README.en.md) · [Скачать beta](https://github.com/Sharko-21/LanVault/releases/tag/v0.4.1-beta.1) · [Инструкция](docs/installation/beta.md) · [Сообщить о проблеме](https://github.com/Sharko-21/LanVault/issues/new/choose)
 
 [![CI](https://github.com/Sharko-21/LanVault/actions/workflows/ci.yml/badge.svg)](https://github.com/Sharko-21/LanVault/actions/workflows/ci.yml)
 
 ## Скачать и запустить
 
-**Текущая версия: 0.4.0-beta.1.** Это публичная beta: основные сценарии проверены, испытания на разных телефонах продолжаются. Для важных файлов сохраняйте дополнительные резервные копии.
+**Текущая версия: 0.4.1-beta.1.** Это публичная beta: основные сценарии проверены, испытания на разных телефонах продолжаются. Для важных файлов сохраняйте дополнительные резервные копии.
 
 | Файл                                                                                                                           | Для чего                                                                                            |
 | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
-| [Windows x64 ZIP](https://github.com/Sharko-21/LanVault/releases/download/v0.4.0-beta.1/LanVault-0.4.0-beta.1-windows-x64.zip) | Распакуйте целиком в постоянную папку; запустите `lanvault-desktop.exe`. DLL должна остаться рядом. |
-| [Android APK](https://github.com/Sharko-21/LanVault/releases/download/v0.4.0-beta.1/LanVault-0.4.0-beta.1-android.apk)         | Установите на телефон. При обновлении устанавливайте поверх предыдущей совместимой версии.          |
-| [SHA256SUMS.txt](https://github.com/Sharko-21/LanVault/releases/download/v0.4.0-beta.1/SHA256SUMS.txt)                         | Контрольные суммы APK и архивов.                                                                    |
+| [Windows x64 ZIP](https://github.com/Sharko-21/LanVault/releases/download/v0.4.1-beta.1/LanVault-0.4.1-beta.1-windows-x64.zip) | Распакуйте целиком в постоянную папку; запустите `lanvault-desktop.exe`. DLL должна остаться рядом. |
+| [Android APK](https://github.com/Sharko-21/LanVault/releases/download/v0.4.1-beta.1/LanVault-0.4.1-beta.1-android.apk)         | Установите на телефон. При обновлении устанавливайте поверх предыдущей совместимой версии.          |
+| [SHA256SUMS.txt](https://github.com/Sharko-21/LanVault/releases/download/v0.4.1-beta.1/SHA256SUMS.txt)                         | Контрольные суммы APK и архивов.                                                                    |
 
 Нужны **Android 10+**, **Windows 10/11 x64 с WebView2**, локальный **NTFS-диск** и общая домашняя сеть. Интерфейс приложений сейчас на русском языке.
 

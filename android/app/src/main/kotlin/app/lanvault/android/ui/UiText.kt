@@ -17,6 +17,7 @@ internal fun stageLabel(stage: String): String =
     when (stage) {
         "HASHING" -> "Проверка файла"
         "UPLOADING" -> "Передача"
+        "RETRYING" -> "Восстанавливаем соединение"
         "VERIFIED",
         "COMMITTING" -> "Сохранение на компьютере"
         "COMMITTED" -> "Сохранён"

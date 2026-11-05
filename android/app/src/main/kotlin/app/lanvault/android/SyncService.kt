@@ -72,7 +72,12 @@ class SyncService : Service() {
                         verifyCopies = verify,
                     ) { progress ->
                         SyncRuntime.update(
-                            AutoSyncState(true, "SYNCING", progress, verifying = verify)
+                            AutoSyncState(
+                                true,
+                                if (progress.reconnecting) "CONNECTING" else "SYNCING",
+                                progress,
+                                verifying = verify,
+                            )
                         )
                         val now = System.currentTimeMillis()
                         if (now - lastNotification > 1000) {

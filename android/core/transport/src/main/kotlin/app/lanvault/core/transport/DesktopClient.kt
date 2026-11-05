@@ -34,6 +34,8 @@ class DesktopClient(
     private val guard: () -> Unit,
     private val token: String? = null,
     private val chunkGuard: () -> Unit = guard,
+    private val readTimeoutMillis: Long = 30_000,
+    private val processingReadTimeoutMillis: Long = 600_000,
 ) : AutoCloseable {
     private val base: String
     private val client: OkHttpClient
@@ -42,6 +44,7 @@ class DesktopClient(
         private set
 
     init {
+        require(readTimeoutMillis > 0 && processingReadTimeoutMillis >= readTimeoutMillis)
         val ip = privateAddress(address)
         failUnless(port in 1024..65535, "INVALID_PORT")
         val certificate = verifiedCa(serverId, hostname, ca, pin)
@@ -85,7 +88,7 @@ class DesktopClient(
                 )
                 .connectionSpecs(listOf(ConnectionSpec.MODERN_TLS))
                 .connectTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(readTimeoutMillis, TimeUnit.MILLISECONDS)
                 .writeTimeout(30, TimeUnit.SECONDS)
                 .addInterceptor { chain ->
                     safeGuard()
@@ -147,7 +150,12 @@ class DesktopClient(
     suspend fun create(descriptor: UploadDescriptor): UploadResult {
         descriptor.validatedSize()
         return WireJson.decodeFromJsonElement(
-            request("POST", "/v1/uploads", WireJson.encodeToString(descriptor).toRequestBody(JSON))
+            request(
+                "POST",
+                "/v1/uploads",
+                WireJson.encodeToString(descriptor).toRequestBody(JSON),
+                longRead = true,
+            )
         )
     }
 
@@ -204,7 +212,7 @@ class DesktopClient(
                 }
             }
         return WireJson.decodeFromJsonElement(
-            request("PUT", "/v1/uploads/${checkedId(id)}/content", body)
+            request("PUT", "/v1/uploads/${checkedId(id)}/content", body, longRead = true)
         )
     }
 
@@ -253,7 +261,7 @@ class DesktopClient(
                 .newBuilder()
                 .eventListener(diagnostics)
                 .apply {
-                    if (longRead) readTimeout(10, TimeUnit.MINUTES)
+                    if (longRead) readTimeout(processingReadTimeoutMillis, TimeUnit.MILLISECONDS)
                 }
                 .build()
         val call = transport.newCall(builder.build())

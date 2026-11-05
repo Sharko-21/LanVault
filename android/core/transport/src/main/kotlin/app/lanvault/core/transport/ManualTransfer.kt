@@ -57,7 +57,7 @@ class ManualTransfer(private val source: OriginalSource, private val journal: Tr
                     item.version == selected.version && item.size in 1..1099511627776L,
                     "SOURCE_CHANGED",
                 )
-                var record: TransferRecord? = null
+                var interruptedRecord: TransferRecord? = null
                 var lastReport = 0L
                 var lastStage = ""
                 fun report(stage: String, bytes: Long, speed: Long = 0) {
@@ -103,7 +103,7 @@ class ManualTransfer(private val source: OriginalSource, private val journal: Tr
                     val sha = hash.digest().joinToString("") { "%02x".format(it.toInt() and 255) }
                     val previous =
                         journal.find(trusted.serverId, dataset, item.uri, item.version, sha)
-                    record =
+                    var record =
                         previous
                             ?: TransferRecord(
                                 UUID.randomUUID().toString(),
@@ -130,97 +130,105 @@ class ManualTransfer(private val source: OriginalSource, private val journal: Tr
                                 ),
                             )
                     record.descriptor.validatedSize()
-                    journal.put(
-                        record.copy(
-                            state = "PREPARED",
-                            errorCode = null,
-                            updatedAtMillis = System.currentTimeMillis(),
-                        )
-                    )
-                    var created =
-                        try {
-                            client.create(record.descriptor)
-                        } catch (e: ClientFailure) {
-                            if (e.code != "SAVED_FILE_UNAVAILABLE") throw e
-                            journal.put(record.copy(state = "SUPERSEDED", errorCode = e.code))
-                            record =
-                                record.copy(
-                                    id = UUID.randomUUID().toString(),
-                                    descriptor =
-                                        record.descriptor.copy(
-                                            uploadRequestId = UUID.randomUUID().toString()
-                                        ),
-                                    state = "PREPARED",
-                                    uploadId = null,
-                                    receipt = null,
-                                    errorCode = null,
-                                )
-                            journal.put(record)
-                            client.create(record.descriptor)
-                        }
-                    if (created.state != "committed") {
-                        val id = created.uploadId ?: throw ClientFailure("INVALID_UPLOAD_ID")
-                        failUnless(canonicalUuid(id), "INVALID_UPLOAD_ID")
+                    retryTransfer(onRetry = { report("RETRYING", 0) }) {
                         record =
                             record.copy(
-                                uploadId = id,
-                                state = "UPLOADING",
+                                state = "PREPARED",
+                                errorCode = null,
                                 updatedAtMillis = System.currentTimeMillis(),
                             )
+                        interruptedRecord = record
                         journal.put(record)
-                        if (created.state in listOf("created", "writing", "failed")) {
+                        var created =
+                            try {
+                                client.create(record.descriptor)
+                            } catch (e: ClientFailure) {
+                                if (e.code != "SAVED_FILE_UNAVAILABLE") throw e
+                                journal.put(record.copy(state = "SUPERSEDED", errorCode = e.code))
+                                record =
+                                    record.copy(
+                                        id = UUID.randomUUID().toString(),
+                                        descriptor =
+                                            record.descriptor.copy(
+                                                uploadRequestId = UUID.randomUUID().toString()
+                                            ),
+                                        state = "PREPARED",
+                                        uploadId = null,
+                                        receipt = null,
+                                        errorCode = null,
+                                    )
+                                interruptedRecord = record
+                                journal.put(record)
+                                client.create(record.descriptor)
+                            }
+                        if (created.state != "committed") {
+                            val id = created.uploadId ?: throw ClientFailure("INVALID_UPLOAD_ID")
+                            failUnless(canonicalUuid(id), "INVALID_UPLOAD_ID")
+                            record =
+                                record.copy(
+                                    uploadId = id,
+                                    state = "UPLOADING",
+                                    updatedAtMillis = System.currentTimeMillis(),
+                                )
+                            interruptedRecord = record
+                            journal.put(record)
+                            if (created.state in listOf("created", "writing", "failed")) {
+                                failUnless(
+                                    source.inspect(item.uri).version == item.version,
+                                    "SOURCE_CHANGED",
+                                )
+                                val started = System.nanoTime()
+                                created =
+                                    client.content(
+                                        id,
+                                        item.size,
+                                        sha,
+                                        { source.open(item.uri) },
+                                        { jobContext.ensureActive() },
+                                    ) { sent ->
+                                        val elapsed =
+                                            ((System.nanoTime() - started) / 1_000_000)
+                                                .coerceAtLeast(1)
+                                        report("UPLOADING", sent, sent * 1000 / elapsed)
+                                    }
+                                failUnless(created.state == "verified", "INVALID_UPLOAD_STATE")
+                            } else
+                                failUnless(
+                                    created.state in listOf("verified", "committing"),
+                                    "INVALID_UPLOAD_STATE",
+                                )
                             failUnless(
                                 source.inspect(item.uri).version == item.version,
                                 "SOURCE_CHANGED",
                             )
-                            val started = System.nanoTime()
-                            created =
-                                client.content(
-                                    id,
-                                    item.size,
-                                    sha,
-                                    { source.open(item.uri) },
-                                    { jobContext.ensureActive() },
-                                ) { sent ->
-                                    val elapsed =
-                                        ((System.nanoTime() - started) / 1_000_000).coerceAtLeast(1)
-                                    report("UPLOADING", sent, sent * 1000 / elapsed)
-                                }
-                            failUnless(created.state == "verified", "INVALID_UPLOAD_STATE")
-                        } else
-                            failUnless(
-                                created.state in listOf("verified", "committing"),
-                                "INVALID_UPLOAD_STATE",
-                            )
-                        failUnless(
-                            source.inspect(item.uri).version == item.version,
-                            "SOURCE_CHANGED",
-                        )
+                            record =
+                                record.copy(
+                                    state = "COMMITTING",
+                                    updatedAtMillis = System.currentTimeMillis(),
+                                )
+                            interruptedRecord = record
+                            journal.put(record)
+                            report("COMMITTING", item.size)
+                            created = client.complete(id)
+                        }
+                        val receipt = created.receipt ?: throw ClientFailure("INVALID_RECEIPT")
+                        failUnless(created.state == "committed", "INVALID_RECEIPT")
+                        validateReceipt(receipt, record.descriptor, trusted)
                         record =
                             record.copy(
-                                state = "COMMITTING",
+                                state = "COMMITTED",
+                                receipt = receipt,
+                                errorCode = null,
                                 updatedAtMillis = System.currentTimeMillis(),
                             )
+                        interruptedRecord = record
                         journal.put(record)
-                        report("COMMITTING", item.size)
-                        created = client.complete(id)
                     }
-                    val receipt = created.receipt ?: throw ClientFailure("INVALID_RECEIPT")
-                    failUnless(created.state == "committed", "INVALID_RECEIPT")
-                    validateReceipt(receipt, record.descriptor, trusted)
-                    record =
-                        record.copy(
-                            state = "COMMITTED",
-                            receipt = receipt,
-                            errorCode = null,
-                            updatedAtMillis = System.currentTimeMillis(),
-                        )
-                    journal.put(record)
                     completed++
                     report("COMMITTED", item.size)
                     committed(item.uri)
                 } catch (e: Exception) {
-                    record
+                    interruptedRecord
                         ?.takeUnless { it.state == "COMMITTED" }
                         ?.let { saved ->
                             withContext(NonCancellable) {

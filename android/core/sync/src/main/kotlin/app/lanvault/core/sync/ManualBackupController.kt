@@ -11,6 +11,9 @@ import app.lanvault.core.network.WifiConnection
 import app.lanvault.core.security.KeystoreTrustStore
 import app.lanvault.core.transport.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -101,25 +104,49 @@ class ManualBackupController(
         if (!media.access().originalMetadata)
             throw ClientFailure("ORIGINAL_METADATA_PERMISSION_REQUIRED")
         dao.interruptPending(System.currentTimeMillis())
-        TrustedSession.open(context, store, forceDiscovery).use { session ->
-            val source =
-                object : OriginalSource {
-                    override fun inspect(uri: String) = media.inspect(uri)
+        var lastProgress = LibraryProgress()
+        repeat(2) { attempt ->
+            try {
+                TrustedSession.open(context, store, forceDiscovery || attempt > 0).use { session ->
+                    val source =
+                        object : OriginalSource {
+                            override fun inspect(uri: String) = media.inspect(uri)
 
-                    override fun open(uri: String) = media.openOriginal(uri)
+                            override fun open(uri: String) = media.openOriginal(uri)
+                        }
+                    return@locked LibraryBackup(source, journal)
+                        .run<LibraryCursor>(
+                            session.trusted,
+                            session.client,
+                            { cursor ->
+                                media.page(cursor).let { LibraryBatch(it.items, it.next) }
+                            },
+                            {
+                                lastProgress = it
+                                progress(it)
+                            },
+                            {
+                                it is MediaUnavailableException ||
+                                    it is ClientFailure && it.code == "SOURCE_CHANGED"
+                            },
+                            verifyCopies = verifyCopies,
+                            checkpoints =
+                                PreferenceLibraryCheckpoints(context, media.checkpointScope()),
+                        )
                 }
-            LibraryBackup(source, journal)
-                .run<LibraryCursor>(
-                    session.trusted,
-                    session.client,
-                    { cursor -> media.page(cursor).let { LibraryBatch(it.items, it.next) } },
-                    progress,
-                    {
-                        it is MediaUnavailableException ||
-                            it is ClientFailure && it.code == "SOURCE_CHANGED"
-                    },
-                    verifyCopies = verifyCopies,
+            } catch (error: Exception) {
+                currentCoroutineContext().ensureActive()
+                if (attempt != 0 || !retryableTransferFailure(error)) throw error
+                progress(
+                    lastProgress.copy(
+                        reconnecting = true,
+                        current = null,
+                        activeTransfers = emptyList(),
+                    )
                 )
+                delay(2_000)
+            }
         }
+        error("Unreachable reconnect state")
     }
 }

@@ -103,7 +103,13 @@ class AutoSyncWorker(context: Context, parameters: WorkerParameters) :
             val result =
                 withTimeout(55 * 60_000L) {
                     controller.syncAll { progress ->
-                        SyncRuntime.update(AutoSyncState(true, "SYNCING", progress))
+                        SyncRuntime.update(
+                            AutoSyncState(
+                                true,
+                                if (progress.reconnecting) "CONNECTING" else "SYNCING",
+                                progress,
+                            )
+                        )
                         val now = System.currentTimeMillis()
                         if (now - lastNotification > 1500) {
                             lastNotification = now

@@ -257,7 +257,10 @@ internal fun CopyScreen(
                                 Modifier.fillMaxWidth().padding(16.dp),
                                 verticalArrangement = Arrangement.spacedBy(14.dp),
                             ) {
-                                Text("За этот запуск", style = MaterialTheme.typography.titleSmall)
+                                Text(
+                                    "За это копирование",
+                                    style = MaterialTheme.typography.titleSmall,
+                                )
                                 Row(
                                     Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,

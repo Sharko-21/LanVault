@@ -21,16 +21,32 @@ import org.junit.Test
  * SocketFactory maps the simulated private address to its loopback listener.
  */
 class DesktopInteropTest {
-    private class RedirectSockets : SocketFactory() {
+    private class RedirectSockets(
+        private val connectFailures: AtomicInteger = AtomicInteger(),
+        private val failNextRead: AtomicBoolean = AtomicBoolean(),
+        private val delayNextRead: AtomicBoolean = AtomicBoolean(),
+    ) : SocketFactory() {
         override fun createSocket() =
             object : Socket() {
                 override fun connect(endpoint: SocketAddress, timeout: Int) {
+                    if (connectFailures.getAndUpdate { if (it > 0) it - 1 else 0 } > 0)
+                        throw SocketTimeoutException("synthetic dropped connection")
                     val port = (endpoint as InetSocketAddress).port
                     super.connect(
                         InetSocketAddress(InetAddress.getLoopbackAddress(), port),
                         timeout,
                     )
                 }
+
+                override fun getInputStream(): InputStream =
+                    object : FilterInputStream(super.getInputStream()) {
+                        override fun read(buffer: ByteArray, offset: Int, length: Int): Int {
+                            if (failNextRead.compareAndSet(true, false))
+                                throw SocketTimeoutException("synthetic lost response")
+                            if (delayNextRead.compareAndSet(true, false)) Thread.sleep(1_500)
+                            return super.read(buffer, offset, length)
+                        }
+                    }
             }
 
         override fun createSocket(h: String, p: Int) =
@@ -214,6 +230,9 @@ class DesktopInteropTest {
         token: String? = null,
         guard: () -> Unit = {},
         chunkGuard: (() -> Unit)? = null,
+        sockets: SocketFactory = RedirectSockets(),
+        readTimeoutMillis: Long = 30_000,
+        processingReadTimeoutMillis: Long = 600_000,
     ): DesktopClient =
         DesktopClient(
             envelope.serverId,
@@ -222,10 +241,12 @@ class DesktopInteropTest {
             envelope.spkiSha256,
             envelope.addresses.first(),
             envelope.port,
-            RedirectSockets(),
+            sockets,
             guard,
             token,
             chunkGuard ?: guard,
+            readTimeoutMillis,
+            processingReadTimeoutMillis,
         )
 
     private suspend fun paired(server: Backend): Pair<TrustEnvelope, TrustedServer> {
@@ -813,6 +834,207 @@ class DesktopInteropTest {
                         Files.readAllBytes(path),
                     ) // Never overwrite.
             }
+        }
+    }
+
+    @Test
+    fun transientConnectionFailureRetriesOneFileWithoutHashingItAgain() = runBlocking {
+        Backend(exe()).use { server ->
+            val (qr, trusted) = paired(server)
+            val dataset = client(qr, trusted.token).use { it.currentDataset() }
+            val journal = Journal()
+            val source = Source(ByteArray(128) { it.toByte() })
+            val stages = mutableListOf<String>()
+            client(qr, trusted.token, sockets = RedirectSockets(connectFailures = AtomicInteger(1)))
+                .use { connection ->
+                    ManualTransfer(source, journal)
+                        .send(
+                            listOf(source.item),
+                            trusted,
+                            connection,
+                            { stages += it.stage },
+                            {},
+                            knownDataset = dataset,
+                        )
+                }
+            assertTrue("Retry was not exercised", "RETRYING" in stages)
+            assertEquals(2, source.opens) // One hash and one body, not one hash per attempt.
+            assertEquals("COMMITTED", journal.records.values.single().state)
+            val receipt = journal.records.values.single().receipt!!
+            assertArrayEquals(
+                source.bytes,
+                Files.readAllBytes(server.archive.resolve(receipt.relativePath)),
+            )
+        }
+    }
+
+    @Test
+    fun lostCommitResponseReconcilesSameRequestWithoutSendingBodyAgain() = runBlocking {
+        Backend(exe()).use { server ->
+            val (qr, trusted) = paired(server)
+            val journal = Journal()
+            val source = Source(ByteArray(128) { it.toByte() })
+            val fault = AtomicBoolean()
+            var injected = false
+            var retrySeen = false
+            client(qr, trusted.token, sockets = RedirectSockets(failNextRead = fault)).use {
+                connection ->
+                ManualTransfer(source, journal)
+                    .send(
+                        listOf(source.item),
+                        trusted,
+                        connection,
+                        { progress ->
+                            if (progress.stage == "COMMITTING" && !injected) {
+                                injected = true
+                                fault.set(true)
+                            }
+                            if (progress.stage == "RETRYING") retrySeen = true
+                        },
+                        {},
+                    )
+            }
+            assertTrue(injected && retrySeen)
+            assertFalse("Response fault was not consumed", fault.get())
+            assertEquals(2, source.opens)
+            assertEquals(1, journal.records.size)
+            assertEquals("COMMITTED", journal.records.values.single().state)
+        }
+    }
+
+    @Test
+    fun slowCreateAndPostUploadResponseUseProcessingBudget() = runBlocking {
+        Backend(exe()).use { server ->
+            val (qr, trusted) = paired(server)
+            val journal = Journal()
+            val source = Source(ByteArray(128) { it.toByte() })
+            client(qr, trusted.token).use { good ->
+                ManualTransfer(source, journal).send(listOf(source.item), trusted, good, {}, {})
+            }
+            val descriptor = journal.records.values.single().descriptor
+            val delayRead = AtomicBoolean()
+            client(
+                    qr,
+                    trusted.token,
+                    sockets = RedirectSockets(delayNextRead = delayRead),
+                    readTimeoutMillis = 1_000,
+                    processingReadTimeoutMillis = 10_000,
+                )
+                .use { connection ->
+                    connection.currentDataset() // Warm the same TLS connection before delaying HTTP
+                    // replies.
+                    delayRead.set(true)
+                    assertEquals("committed", connection.create(descriptor).state)
+                    assertFalse(delayRead.get())
+                    val fresh =
+                        descriptor.copy(
+                            uploadRequestId = java.util.UUID.randomUUID().toString(),
+                            sha256 = digestHex(ByteArray(128) { 7 }),
+                        )
+                    val created = connection.create(fresh)
+                    delayRead.set(true)
+                    val verified =
+                        connection.content(
+                            created.uploadId!!,
+                            128,
+                            fresh.sha256,
+                            { ByteArray(128) { 7 }.inputStream() },
+                            {},
+                            {},
+                        )
+                    assertEquals("verified", verified.state)
+                    assertFalse(delayRead.get())
+                }
+        }
+    }
+
+    @Test
+    fun failedLibraryPageResumesWithoutRevisitingEarlierPages() = runBlocking {
+        Backend(exe()).use { server ->
+            val (qr, trusted) = paired(server)
+            val sample = Source(ByteArray(128) { it.toByte() })
+            val items =
+                (1..5).map {
+                    sample.item.copy(
+                        uri = "content://media/test/images/media/$it",
+                        name = "$it.heic",
+                    )
+                }
+            var failFourth = true
+            val opens = ConcurrentHashMap<String, Int>()
+            val source =
+                object : OriginalSource {
+                    override fun inspect(uri: String): MediaItem {
+                        if (uri == items[3].uri && failFourth)
+                            throw ClientFailure("DESKTOP_RESPONSE_TIMEOUT")
+                        return items.single { it.uri == uri }
+                    }
+
+                    override fun open(uri: String): InputStream {
+                        opens.merge(uri, 1, Int::plus)
+                        return sample.bytes.inputStream()
+                    }
+                }
+            val journal = Journal()
+            val durable = mutableMapOf<LibraryRunKey, LibraryCheckpoint<Int>>()
+            val checkpoints =
+                object : LibraryCheckpointStore<Int> {
+                    override suspend fun load(key: LibraryRunKey) = durable[key]
+
+                    override suspend fun save(
+                        key: LibraryRunKey,
+                        checkpoint: LibraryCheckpoint<Int>,
+                    ) {
+                        durable[key] = checkpoint
+                    }
+
+                    override suspend fun clear(key: LibraryRunKey) {
+                        durable.remove(key)
+                    }
+                }
+            val pages = mutableListOf<Int?>()
+            suspend fun run(connection: DesktopClient) =
+                LibraryBackup(source, journal)
+                    .run<Int>(
+                        trusted,
+                        connection,
+                        { cursor ->
+                            pages += cursor
+                            val offset = (cursor ?: 0) * 2
+                            LibraryBatch(
+                                items.drop(offset).take(2),
+                                if (offset + 2 < items.size) (cursor ?: 0) + 1 else null,
+                            )
+                        },
+                        {},
+                        parallelism = 1,
+                        checkpoints = checkpoints,
+                    )
+            client(qr, trusted.token).use { connection ->
+                try {
+                    run(connection)
+                    fail("Synthetic interruption ignored")
+                } catch (_: ClientFailure) {}
+            }
+            assertEquals(listOf(null, 1), pages)
+            assertEquals(1, durable.values.single().cursor)
+            val firstPageReads = items.take(2).map { opens[it.uri] }
+            failFourth = false
+            pages.clear()
+            client(qr, trusted.token).use { connection ->
+                val resumed = run(connection)
+                assertEquals(5, resumed.scanned)
+                assertEquals(listOf(1, 2), pages)
+                assertEquals(firstPageReads, items.take(2).map { opens[it.uri] })
+                assertTrue(durable.isEmpty())
+                pages.clear()
+                assertEquals(5, run(connection).skipped)
+                assertEquals(
+                    null,
+                    pages.first(),
+                ) // A completed run must discover new media on the next pass.
+            }
+            assertEquals(5, journal.records.values.count { it.state == "COMMITTED" })
         }
     }
 }

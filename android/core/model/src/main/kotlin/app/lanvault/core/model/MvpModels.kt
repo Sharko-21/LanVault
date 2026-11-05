@@ -137,4 +137,5 @@ data class LibraryProgress(
     val unavailable: Int = 0,
     val current: TransferProgress? = null,
     val activeTransfers: List<TransferProgress> = emptyList(),
+    val reconnecting: Boolean = false,
 )

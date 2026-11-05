@@ -76,6 +76,14 @@ class MediaRepository(private val context: Context) {
             granted(Manifest.permission.ACCESS_MEDIA_LOCATION),
         )
 
+    /** Stable across new photos, invalidated by permission changes or a rebuilt media volume. */
+    fun checkpointScope(): String =
+        access().toString() +
+            "|" +
+            MediaStore.getExternalVolumeNames(context).sorted().joinToString("|") {
+                it + ":" + MediaStore.getVersion(context, it)
+            }
+
     suspend fun page(cursor: LibraryCursor? = null): MediaPage =
         withContext(Dispatchers.IO) {
             val access = access()

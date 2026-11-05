@@ -15,11 +15,21 @@ class LibraryBackup(private val source: OriginalSource, private val journal: Tra
         now: () -> Long = System::currentTimeMillis,
         parallelism: Int = MAX_TRANSFER_WORKERS,
         verifyCopies: Boolean = false,
+        checkpoints: LibraryCheckpointStore<C>? = null,
     ): LibraryProgress {
         val dataset = client.currentDataset()
         val transfer = ManualTransfer(source, journal)
-        var cursor: C? = null
-        var result = LibraryProgress()
+        val key = LibraryRunKey(trusted.serverId, trusted.deviceId, dataset, verifyCopies)
+        val restored =
+            checkpoints?.load(key)?.takeIf {
+                now() - it.updatedAtMillis in 0 until 86_400_000L
+            }
+        if (restored == null) checkpoints?.clear(key)
+        var cursor: C? = restored?.cursor
+        var result =
+            restored?.progress?.copy(current = null, activeTransfers = emptyList())
+                ?: LibraryProgress()
+        if (restored != null) progress(result)
         val gate = Any()
         val active = linkedMapOf<Int, TransferProgress>()
         fun update(change: (LibraryProgress) -> LibraryProgress) =
@@ -52,7 +62,7 @@ class LibraryBackup(private val source: OriginalSource, private val journal: Tra
                             !verifyCopies && now() - previous.updatedAtMillis in 0 until 86_400_000L
                         if (!saved) {
                             try {
-                                val checked = client.create(previous.descriptor)
+                                val checked = retryTransfer { client.create(previous.descriptor) }
                                 failUnless(checked.state == "committed", "INVALID_RECEIPT")
                                 validateReceipt(
                                     checked.receipt ?: throw ClientFailure("INVALID_RECEIPT"),
@@ -95,8 +105,20 @@ class LibraryBackup(private val source: OriginalSource, private val journal: Tra
                     }
                 }
             }
-            cursor = batch.next
-            // Providers must advance their cursor, including pages filtered to no visible media.
+            val next = batch.next
+            require(next == null || next != cursor) { "Library cursor did not advance" }
+            currentCoroutineContext().ensureActive()
+            if (next == null) checkpoints?.clear(key)
+            else
+                checkpoints?.save(
+                    key,
+                    LibraryCheckpoint(
+                        next,
+                        result.copy(current = null, activeTransfers = emptyList()),
+                        now(),
+                    ),
+                )
+            cursor = next
         } while (cursor != null)
         return result
     }

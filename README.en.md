@@ -2,17 +2,17 @@
 
 Copy original photos and videos from Android to a folder on your Windows PC over your home network. No cloud, no recompression. Originals stay on your phone.
 
-[Русский](README.md) · [Download beta](https://github.com/Sharko-21/LanVault/releases/tag/v0.4.0-beta.1) · [Report a bug](https://github.com/Sharko-21/LanVault/issues/new/choose)
+[Русский](README.md) · [Download beta](https://github.com/Sharko-21/LanVault/releases/tag/v0.4.1-beta.1) · [Report a bug](https://github.com/Sharko-21/LanVault/issues/new/choose)
 
 ## Download
 
-**0.4.0-beta.1 is a public beta.** Core scenarios are tested; broader device testing is ongoing. Keep an additional backup of important files. The app interface is currently in Russian.
+**0.4.1-beta.1 is a public beta.** Core scenarios are tested; broader device testing is ongoing. Keep an additional backup of important files. The app interface is currently in Russian.
 
 | Download                                                                                                                       | Install                                                                                                    |
 | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
-| [Windows x64 ZIP](https://github.com/Sharko-21/LanVault/releases/download/v0.4.0-beta.1/LanVault-0.4.0-beta.1-windows-x64.zip) | Extract the entire archive to a permanent location. Run `lanvault-desktop.exe`, keeping its DLL beside it. |
-| [Android APK](https://github.com/Sharko-21/LanVault/releases/download/v0.4.0-beta.1/LanVault-0.4.0-beta.1-android.apk)         | Install on Android 10+. Install compatible updates over the existing app to preserve pairing.              |
-| [SHA256SUMS.txt](https://github.com/Sharko-21/LanVault/releases/download/v0.4.0-beta.1/SHA256SUMS.txt)                         | Verify integrity with `Get-FileHash <file> -Algorithm SHA256`.                                             |
+| [Windows x64 ZIP](https://github.com/Sharko-21/LanVault/releases/download/v0.4.1-beta.1/LanVault-0.4.1-beta.1-windows-x64.zip) | Extract the entire archive to a permanent location. Run `lanvault-desktop.exe`, keeping its DLL beside it. |
+| [Android APK](https://github.com/Sharko-21/LanVault/releases/download/v0.4.1-beta.1/LanVault-0.4.1-beta.1-android.apk)         | Install on Android 10+. Install compatible updates over the existing app to preserve pairing.              |
+| [SHA256SUMS.txt](https://github.com/Sharko-21/LanVault/releases/download/v0.4.1-beta.1/SHA256SUMS.txt)                         | Verify integrity with `Get-FileHash <file> -Algorithm SHA256`.                                             |
 
 Requirements: Android 10+, Windows 10/11 x64 with WebView2, a local NTFS archive and a shared home network. Windows beta is **unsigned** and may trigger SmartScreen; Android APK uses a permanent release signer. Checksums establish integrity, not publisher identity.
 
