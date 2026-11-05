@@ -76,7 +76,7 @@ jobs:
           cargo metadata --locked --format-version 1 --filter-platform x86_64-pc-windows-msvc --features lanvault-desktop/custom-protocol > artifacts/cargo-windows.json
           ./android/gradlew.bat -p android --no-daemon --console=plain :app:dependencies --configuration releaseRuntimeClasspath > artifacts/android-dependencies.log
           python tooling/audit-dependencies.py --cargo-metadata artifacts/cargo-windows.json --gradle-report artifacts/android-dependencies.log --output artifacts/dependency-audit.json
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: windows-and-android-checks
@@ -113,7 +113,7 @@ jobs:
           target: default
           disable-animations: true
           script: bash android/gradlew -p android --no-daemon :app:connectedDebugAndroidTest
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: android-api-${{ matrix.api }}-reports
