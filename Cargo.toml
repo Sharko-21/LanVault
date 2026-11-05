@@ -30,7 +30,7 @@ lanvault-database = { path = "crates/database" }
 lanvault-server = { path = "crates/server" }
 tokio = { version = "=1.54.1", features = ["rt-multi-thread", "macros", "net", "sync", "time", "io-util", "fs", "io-std", "signal"] }
 sha2 = "=0.10.9"
-base64 = "=0.22.1"
+base64 = "=0.23.1"
 chrono = { version = "=0.4.42", default-features = false, features = ["std", "serde", "clock"] }
 
 [workspace.lints.rust]
