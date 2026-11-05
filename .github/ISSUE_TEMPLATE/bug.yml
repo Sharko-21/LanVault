@@ -1,0 +1,25 @@
+name: Ошибка
+description: Поведение приложения или ошибка копирования
+body:
+  - type: markdown
+    attributes:
+      value: Не прикладывайте QR-коды, токены, личные фотографии и каталог состояния. Для уязвимости используйте SECURITY.md.
+  - type: input
+    id: version
+    attributes:
+      label: Версия LanVault
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Модель телефона, Android и версия Windows
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Шаги и результат
+      description: Что ожидалось, что произошло, код ошибки и используется ли VPN.
+    validations:
+      required: true

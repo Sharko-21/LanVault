@@ -1,0 +1,17 @@
+name: Предложить улучшение / Feature request
+description: Расскажите, что сделает LanVault удобнее.
+title: "[Feature]: "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Какую задачу нужно решить? / Problem
+      description: Опишите свой сценарий без личных файлов, QR-кодов и токенов.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Предложение / Suggested change
+    validations:
+      required: true

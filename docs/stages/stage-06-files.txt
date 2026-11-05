@@ -1,0 +1,27 @@
+android/app/build.gradle.kts
+android/app/src/main/kotlin/app/lanvault/android/MainActivity.kt
+android/core/model/src/main/kotlin/app/lanvault/core/model/MvpModels.kt
+android/core/transport/src/main/kotlin/app/lanvault/core/transport/LibraryBackup.kt
+android/core/transport/src/main/kotlin/app/lanvault/core/transport/ManualTransfer.kt
+android/core/transport/src/main/kotlin/app/lanvault/core/transport/TransferWorkers.kt
+android/core/transport/src/test/kotlin/app/lanvault/core/transport/DesktopInteropTest.kt
+android/core/transport/src/test/kotlin/app/lanvault/core/transport/TransferWorkersTest.kt
+crates/server/src/uploads.rs
+desktop/src-tauri/src/lib.rs
+tooling/benchmark-transfers.py
+tooling/test-server.py
+tooling/prepare-aster-lan.py
+tooling/apply-aster-lan.py
+tooling/install-aster-lan.ps1
+integrations/aster-lan/README.md
+integrations/aster-lan/local_services_windows.go
+integrations/aster-lan/local_services_windows_test.go
+README.md
+docs/installation/android-mvp.md
+docs/stages/stage-06-parallel.md
+docs/stages/stage-06-files.txt
+
+External ASTER source files:
+<aster-source>/internal/winclient/guard_windows.go
+<aster-source>/internal/winclient/local_services_windows.go
+<aster-source>/internal/winclient/local_services_windows_test.go

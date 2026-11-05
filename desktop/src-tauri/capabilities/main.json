@@ -1,0 +1,21 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main-window",
+  "description": "Local receiver controls. No shell, arbitrary filesystem APIs, or remote origins.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "allow-runtime-info",
+    "allow-pick-backup-folder",
+    "allow-open-backup-folder",
+    "allow-network-interfaces",
+    "allow-start-server",
+    "allow-stop-server",
+    "allow-set-paused",
+    "allow-create-pairing",
+    "allow-probe-discovery",
+    "allow-cancel-pairing",
+    "allow-approve-pairing",
+    "allow-revoke-device"
+  ]
+}

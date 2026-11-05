@@ -1,0 +1,13 @@
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.png binary
+*.jpg binary
+*.ico binary
+*.jar binary
+*.der binary
+*.bin binary
+# Preserve bundled third-party legal texts, including their original line endings.
+THIRD_PARTY_NOTICES.txt -text -whitespace
+android/app/src/main/assets/third-party-notices.txt -text -whitespace
+licenses/third-party/** -text -whitespace

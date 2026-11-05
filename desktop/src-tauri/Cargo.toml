@@ -1,0 +1,30 @@
+[package]
+name = "lanvault-desktop"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+name = "lanvault_desktop"
+crate-type = ["rlib"]
+
+[features]
+default = []
+custom-protocol = ["tauri/custom-protocol"]
+
+[build-dependencies]
+tauri-build = { version = "=2.7.4", features = [] }
+
+[dependencies]
+tauri = { version = "=2.12.5", features = ["tray-icon"] }
+tauri-plugin-dialog = "=2.8.4"
+serde.workspace = true
+lanvault-protocol.workspace = true
+lanvault-storage.workspace = true
+lanvault-server.workspace = true
+tokio.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,61 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/domain",
+    "crates/protocol",
+    "crates/storage",
+    "crates/platform-windows",
+    "crates/database",
+    "crates/server",
+    "desktop/src-tauri",
+]
+default-members = ["crates/domain", "crates/protocol", "crates/storage"]
+
+[workspace.package]
+version = "0.4.0-beta.1"
+edition = "2021"
+rust-version = "1.94"
+publish = false
+
+[workspace.dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+thiserror = "2.0.17"
+uuid = { version = "1.18.1", features = ["serde", "v4"] }
+lanvault-domain = { path = "crates/domain" }
+lanvault-protocol = { path = "crates/protocol" }
+lanvault-storage = { path = "crates/storage" }
+lanvault-platform-windows = { path = "crates/platform-windows" }
+lanvault-database = { path = "crates/database" }
+lanvault-server = { path = "crates/server" }
+tokio = { version = "=1.54.1", features = ["rt-multi-thread", "macros", "net", "sync", "time", "io-util", "fs", "io-std", "signal"] }
+sha2 = "=0.10.9"
+base64 = "=0.22.1"
+chrono = { version = "=0.4.42", default-features = false, features = ["std", "serde", "clock"] }
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+
+# The portable Desktop build keeps debug assertions and its existing state path,
+# while optimizing the bulk TLS, hashing and storage path used by real backups.
+[profile.dev.package.lanvault-server]
+opt-level = 2
+
+[profile.dev.package.lanvault-storage]
+opt-level = 2
+
+[profile.dev.package.sha2]
+opt-level = 3
+
+[profile.dev.package.digest]
+opt-level = 3
+
+[profile.dev.package.rustls]
+opt-level = 2
+
+[profile.dev.package.sqlx-sqlite]
+opt-level = 2

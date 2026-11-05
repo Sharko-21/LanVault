@@ -1,0 +1,8 @@
+{
+  "gradleVersion": "9.3.1",
+  "wrapperJarSha256": "b3a875ddc1f044746e1b1a55f645584505f4a10438c1afea9f15e92a7c42ec13",
+  "distributionSha256": "b266d5ff6b90eada6dc3b20cb090e3731302e553a27c5d3e4df1f0d76beaff06",
+  "wrapperSource": "https://raw.githubusercontent.com/gradle/gradle/v9.3.1/gradle/wrapper/gradle-wrapper.jar",
+  "wrapperChecksumSource": "https://services.gradle.org/distributions/gradle-9.3.1-wrapper.jar.sha256",
+  "distributionChecksumSource": "https://services.gradle.org/distributions/gradle-9.3.1-bin.zip.sha256"
+}

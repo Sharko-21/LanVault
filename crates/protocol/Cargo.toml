@@ -1,0 +1,19 @@
+[package]
+name = "lanvault-protocol"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+lanvault-domain.workspace = true
+serde.workspace = true
+uuid.workspace = true
+thiserror.workspace = true
+chrono.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,42 @@
+[
+  {
+    "repository": "https://github.com/dropbox/rust-alloc-no-stdlib",
+    "file": "dropbox_rust-alloc-no-stdlib.txt",
+    "source": "https://github.com/dropbox/rust-alloc-no-stdlib/blob/master/LICENSE",
+    "spdx": "BSD-3-Clause",
+    "sha256": "c0c56f26d9c051cac4d200c34c84e7ae9aaa853e01a982a1df08b09931e518ae"
+  },
+  {
+    "repository": "https://github.com/ebarnard/rust-plist",
+    "file": "ebarnard_rust-plist.txt",
+    "source": "https://github.com/ebarnard/rust-plist/blob/master/LICENCE",
+    "spdx": "MIT",
+    "sha256": "5b0ae40d1a35f7ae6591a28e44771240e6a88cb03a66c9189a45b9681639b466"
+  },
+  {
+    "repository": "https://github.com/wravery/webview2-rs",
+    "file": "wravery_webview2-rs.txt",
+    "source": "https://github.com/wravery/webview2-rs/blob/main/LICENSE",
+    "spdx": "MIT",
+    "sha256": "0dcf41516e608bbcb6cdc5229feb7b86fe4a643b85e7df251133c93408fdac73"
+  },
+  {
+    "repository": "https://github.com/akhilles/crc-catalog",
+    "file": "crc-catalog-Apache-2.0.txt",
+    "source": "https://github.com/akhilles/crc-catalog/blob/master/LICENSES/Apache-2.0.txt",
+    "sha256": "d3cdb764b98283ee7c3a3cea8d374e2a2957322374378d1f3263f4d512741fc3"
+  },
+  {
+    "repository": "https://github.com/akhilles/crc-catalog",
+    "file": "crc-catalog-MIT.txt",
+    "source": "https://github.com/akhilles/crc-catalog/blob/master/LICENSES/MIT.txt",
+    "sha256": "5ef8fcfb6cccec8fcae043c834099a60c8b7406408db576e026d2b7e67dc5cf5"
+  },
+  {
+    "repository": "https://github.com/servo/stylo",
+    "file": "mozilla-MPL-2.0.txt",
+    "source": "https://www.mozilla.org/media/MPL/2.0/index.txt",
+    "spdx": "MPL-2.0",
+    "sha256": "3f3d9e0024b1921b067d6f7f88deb4a60cbe7a78e76c64e3f1d7fc3b779b9d04"
+  }
+]

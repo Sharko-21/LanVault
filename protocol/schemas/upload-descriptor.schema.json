@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:lanvault:protocol:v1:upload-descriptor",
+  "title": "UploadDescriptor",
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid",
+      "minLength": 36,
+      "maxLength": 36,
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "datasetId",
+    "mediaId",
+    "revisionId",
+    "uploadRequestId",
+    "originalName",
+    "size",
+    "sha256",
+    "mediaType",
+    "mimeType"
+  ],
+  "properties": {
+    "datasetId": { "$ref": "#/$defs/uuid" },
+    "mediaId": { "$ref": "#/$defs/uuid" },
+    "revisionId": { "$ref": "#/$defs/uuid" },
+    "uploadRequestId": { "$ref": "#/$defs/uuid" },
+    "originalName": { "type": "string", "minLength": 1, "maxLength": 255 },
+    "size": { "type": "string", "format": "positive-int64", "pattern": "^[1-9][0-9]{0,18}$" },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$", "minLength": 64, "maxLength": 64 },
+    "mediaType": { "enum": ["photo", "video"] },
+    "mimeType": {
+      "type": "string",
+      "pattern": "^[a-z0-9!#$&^_.+-]+/[a-z0-9!#$&^_.+-]+(?![\\s\\S])",
+      "maxLength": 127
+    },
+    "capturedAt": { "type": ["string", "null"], "format": "date-time" },
+    "modifiedAt": { "type": ["string", "null"], "format": "date-time" },
+    "album": { "type": ["string", "null"], "maxLength": 255 }
+  }
+}

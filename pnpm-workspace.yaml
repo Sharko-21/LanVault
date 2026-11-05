@@ -1,0 +1,7 @@
+packages:
+  - desktop
+
+onlyBuiltDependencies:
+  - esbuild
+
+minimumReleaseAge: 1440

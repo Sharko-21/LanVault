@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Уязвимость / Security vulnerability
+    url: https://github.com/Sharko-21/LanVault/security/policy
+    about: Используйте приватный канал, описанный в SECURITY.md. Не публикуйте секреты в issue.

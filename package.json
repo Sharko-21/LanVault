@@ -1,0 +1,26 @@
+{
+  "name": "lanvault-workspace",
+  "version": "0.4.0-beta.1",
+  "private": true,
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @lanvault/desktop dev",
+    "dev:desktop": "pnpm --filter @lanvault/desktop tauri dev",
+    "build:web": "pnpm --filter @lanvault/desktop build",
+    "build:desktop": "pnpm --filter @lanvault/desktop tauri build --no-bundle",
+    "typecheck": "pnpm --filter @lanvault/desktop typecheck",
+    "test": "node --test tests/*.test.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "pnpm test && pnpm typecheck && pnpm build:web && pnpm format:check",
+    "doctor": "node tooling/doctor.mjs"
+  },
+  "devDependencies": {
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "prettier": "3.6.2"
+  }
+}

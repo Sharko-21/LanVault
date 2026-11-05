@@ -1,0 +1,167 @@
+{
+  "base": {
+    "datasetId": "392a1a51-8957-4ec6-9d28-a0457273a091",
+    "mediaId": "730a6d02-ecf4-43d2-8bbb-10b2438d3cd0",
+    "revisionId": "1e80c36b-cd5b-4d7a-83bc-20fb539ad2b3",
+    "uploadRequestId": "f704678e-7f24-4328-bb43-f1b27e62bc0b",
+    "originalName": "IMG_20261104.heic",
+    "size": "9007199254740993",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "mediaType": "photo",
+    "mimeType": "image/heic"
+  },
+  "cases": [
+    {
+      "name": "beyond JavaScript safe integer",
+      "patch": {},
+      "valid": true
+    },
+    {
+      "name": "signed 64-bit maximum",
+      "patch": {
+        "size": "9223372036854775807"
+      },
+      "valid": true
+    },
+    {
+      "name": "signed 64-bit overflow",
+      "patch": {
+        "size": "9223372036854775808"
+      },
+      "valid": false
+    },
+    {
+      "name": "zero length",
+      "patch": {
+        "size": "0"
+      },
+      "valid": false
+    },
+    {
+      "name": "negative length",
+      "patch": {
+        "size": "-1"
+      },
+      "valid": false
+    },
+    {
+      "name": "leading zero",
+      "patch": {
+        "size": "01"
+      },
+      "valid": false
+    },
+    {
+      "name": "numeric JSON length loses precision",
+      "patch": {
+        "size": 1024
+      },
+      "valid": false
+    },
+    {
+      "name": "scientific notation",
+      "patch": {
+        "size": "1e6"
+      },
+      "valid": false
+    },
+    {
+      "name": "uppercase hash",
+      "patch": {
+        "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+      },
+      "valid": false
+    },
+    {
+      "name": "invalid hash",
+      "patch": {
+        "sha256": "not-a-hash"
+      },
+      "valid": false
+    },
+    {
+      "name": "invalid identity",
+      "patch": {
+        "mediaId": "phone-1"
+      },
+      "valid": false
+    },
+    {
+      "name": "unknown media type",
+      "patch": {
+        "mediaType": "document"
+      },
+      "valid": false
+    },
+    {
+      "name": "client cannot select server path",
+      "patch": {
+        "destinationPath": "C:/Windows/system.ini"
+      },
+      "valid": false
+    },
+    {
+      "name": "empty filename",
+      "patch": {
+        "originalName": ""
+      },
+      "valid": false
+    },
+    {
+      "name": "explicit unknown capture time",
+      "patch": {
+        "capturedAt": null
+      },
+      "valid": true
+    },
+    {
+      "name": "compact UUID is not canonical",
+      "patch": {
+        "mediaId": "730a6d02ecf443d28bbb10b2438d3cd0"
+      },
+      "valid": false
+    },
+    {
+      "name": "URN UUID is not canonical",
+      "patch": {
+        "mediaId": "urn:uuid:730a6d02-ecf4-43d2-8bbb-10b2438d3cd0"
+      },
+      "valid": false
+    },
+    {
+      "name": "uppercase hyphenated UUID",
+      "patch": {
+        "mediaId": "730A6D02-ECF4-43D2-8BBB-10B2438D3CD0"
+      },
+      "valid": true
+    },
+    {
+      "name": "byte count with trailing newline",
+      "patch": {
+        "size": "1\n"
+      },
+      "valid": false
+    },
+    {
+      "name": "hash with trailing newline",
+      "patch": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"
+      },
+      "valid": false
+    },
+    {
+      "name": "MIME with trailing newline",
+      "patch": {
+        "mimeType": "image/heic\n"
+      },
+      "valid": false
+    },
+    {
+      "name": "invalid capture timestamp",
+      "patch": {
+        "capturedAt": "yesterday"
+      },
+      "valid": false
+    }
+  ]
+}

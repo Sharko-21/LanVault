@@ -1,0 +1,8 @@
+{
+  "applicationId": "app.lanvault.android",
+  "minSdk": 29,
+  "releaseSignerSha256": "8e72d5335512cc240d3eb8804b802e636b894e747161e27becbc8471c88bb4b4",
+  "previousSignerSha256": "96d66683912f7d48bac413ba013606312386f08743867094b8042a2bb1e39349",
+  "rotationMinSdk": 28,
+  "privateKeysIncluded": false
+}
