@@ -62,6 +62,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build:web
       - run: cargo fmt --all --check
+      - name: Warm Windows network providers
+        timeout-minutes: 1
+        run: powershell.exe -NoLogo -NoProfile -NonInteractive -Command 'Get-NetAdapter | Out-Null; Get-NetConnectionProfile | Out-Null; Get-NetIPAddress -AddressFamily IPv4 | Out-Null'
       - run: cargo test --locked -p lanvault-domain -p lanvault-protocol -p lanvault-storage -p lanvault-platform-windows -p lanvault-database -p lanvault-server
       - run: cargo clippy --release --locked --workspace --all-targets --features lanvault-desktop/custom-protocol -- -D warnings
       - run: cargo build --release --locked -p lanvault-server -p lanvault-desktop --features lanvault-desktop/custom-protocol
