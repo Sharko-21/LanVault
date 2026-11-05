@@ -1966,7 +1966,7 @@ dependencies = [
  "base64 0.22.1",
  "chrono",
  "futures-util",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "hyper",
  "hyper-util",
  "lanvault-database",
